@@ -1,6 +1,6 @@
 <?php
 ignore_user_abort(1);
-ini_set("display_errors", 0);
+ini_set("display_errors", 1);
 include ("/u01/app/web/php_new/utils.inc");
 //include ("/u01/app/web/php_new/login.inc");
 require("../isgcoalib.php");

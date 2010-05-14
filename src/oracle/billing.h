@@ -46,6 +46,8 @@ public:
 	int queryOnline(std::string pbhk, queryResult &_rv);
 	int queryIsgServices(std::string pbhk, queryResult &_rv);
 	int queryStaticIP(std::string ip, std::string server, queryResult &_rv);
+	int queryInitialSubscriber(std::string login, std::string password, queryResult &_rv);
+	int querySQL(std::string query, std::vector<std::string> params, queryResult &_rv);
 	void cancelRequest(void);
 protected:
 private:

@@ -1,12 +1,12 @@
 AC_INIT([isg_cached], [1.1], [omever@gmail.com])
 
 AX_LIB_ORACLE_OCI()
+PKG_CHECK_MODULES(XML, libxml-2.0 >= 2.0)
+PKG_CHECK_MODULES(MEMCACHED, libmemcached)
 
-AC_CONFIG_AUX_DIR(config)
 AC_PROG_CXX
-AC_CONFIG_FILES([Makefile src/Makefile src/testing/Makefile])
+AC_CONFIG_FILES([Makefile])
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE([1.9 foreign])
-AM_INIT_AUTOMAKE([subdir-objects])
 
 AC_OUTPUT

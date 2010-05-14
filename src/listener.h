@@ -5,19 +5,18 @@
 // Copyright   : Property of JV InfoLada
 // Description : Hello World in C, Ansi-style
 //============================================================================
+
 #ifndef LISTENER_H
 #define LISTENER_H
-
-#include "oracle/billing.h"
-#include "cbilling/cbilling.h"
-#include "radius/dictionary.h"
 
 #include <string>
 #include <list>
 #include <libmemcached/memcached.h>
 #include <pthread.h>
 
-class CachedBilling;
+#include "oracle/billing.h"
+#include "radius/dictionary.h"
+
 class Dispatcher;
 
 class Listener
@@ -34,14 +33,12 @@ public:
 	int getNextId();
 	
 	RadiusDictionary dict;
-	CachedBilling&  cachedBilling();
 protected:
 	void warehouse();
 private:
 	std::string _path;
 	int _sd;
 	Billing _bill;
-	CachedBilling _cbill;
 	memcached_st *_mc;
 	memcached_server_st *_mc_servers;
 	pthread_attr_t attr;

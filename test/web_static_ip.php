@@ -9,6 +9,6 @@
 	echo "Connect failed\n";
     }
     
-    print_r($cache->getStaticIP("192.168.226.189", "217.113.112.1"));
+    print_r($cache->getStaticIP("192.168.226.189", "217.113.112.11"));
     $cache->disconnect();
 ?>

@@ -71,7 +71,7 @@ Billing::~Billing()
 void Billing::connect(std::string connstr, std::string username, std::string password)
 {
 	__pool = __env->createStatelessConnectionPool(username, password, connstr, 15, 1, StatelessConnectionPool::HOMOGENEOUS);
-	__pool->setStmtCacheSize(10);
+	__pool->setStmtCacheSize(50);
 	__pool->setBusyOption(StatelessConnectionPool::NOWAIT);
 }
 
@@ -291,20 +291,39 @@ int BillingInstance::SQL(std::string query, std::vector<std::string> params, que
 		}
 
 		std::cerr << "Query execute" << std::endl;
-		ResultSet *rs = sth->executeQuery();
-		const std::vector<MetaData> md = rs->getColumnListMetaData();
+		ResultSet *rs = NULL;
+		int count = NULL;
 
-		if(rs) {
-			while( rs->next() ) {
-				std::multimap<std::string, std::string> tmp;
-				tmp.clear();
-				for(int i=0; i < md.size(); ++i) {
-					tmp.insert(std::pair<std::string, std::string>(md.at(i).getString(MetaData::ATTR_NAME), rs->getString(i+1)));
-				}
-				_rv.push_back(tmp);
-			}
+		switch(sth->execute()) {
+			case Statement::RESULT_SET_AVAILABLE:
+				rs = sth->getResultSet();
+				break;
+			case Statement::UPDATE_COUNT_AVAILABLE:
+				count = sth->getUpdateCount();
+				break;
+			case Statement::NEEDS_STREAM_DATA:
+			case Statement::PREPARED:
+			case Statement::STREAM_DATA_AVAILABLE:
+			case Statement::UNPREPARED:
+			default:
+				std::cerr << "Unable status type of the execute result method! Within query: " << query << std::endl;
+				break;
 		}
-		sth->closeResultSet(rs);
+		if(rs != NULL) {
+			const std::vector<MetaData> md = rs->getColumnListMetaData();
+
+			if(rs) {
+				while( rs->next() ) {
+					std::multimap<std::string, std::string> tmp;
+					tmp.clear();
+					for(int i=0; i < md.size(); ++i) {
+						tmp.insert(std::pair<std::string, std::string>(md.at(i).getString(MetaData::ATTR_NAME), rs->getString(i+1)));
+					}
+					_rv.push_back(tmp);
+				}
+			}
+			sth->closeResultSet(rs);
+		}
 		retval = 0;
 	}
 	catch (SQLException &sqlExcp)
@@ -318,6 +337,15 @@ int BillingInstance::SQL(std::string query, std::vector<std::string> params, que
 	}
 
 	return retval;
+}
+
+int BillingInstance::queryInitialSubscriber(std::string login, std::string password, queryResult &_rv) {
+	std::vector<std::string> __params;
+	__params.push_back(login);
+	__params.push_back(password);
+
+	return SQL("SELECT rc, user_id, pred_summ, balance, trast_limit \
+		FROM TABLE(PKG_ACC.FIRSTLY_ABON_CHECK_ISG(:1, :2))", __params, _rv);
 }
 
 void BillingInstance::cancelRequest(void)
@@ -341,3 +369,9 @@ void BillingInstance::cancelRequest(void)
 
 	OCIHandleFree((dvoid *)errhp, (ub4)OCI_HTYPE_ERROR);
 }
+
+int BillingInstance::querySQL(std::string query, std::vector<std::string> params, queryResult &_rv)
+{
+	return SQL(query, params, _rv);
+}
+

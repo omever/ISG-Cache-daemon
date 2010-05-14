@@ -2,7 +2,7 @@
 
 class ISGCache
 {
-    public $socketPath = '/tmp/test.sock';
+    public $socketPath = '/tmp/l.sock';
     private $socket = null;
     private $parser = null;
     private $rv = FALSE;

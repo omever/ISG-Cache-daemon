@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <pwd.h>
 
 #include "oracle/billing.h"
 #include "listener.h"
@@ -23,37 +24,48 @@
 #include <sstream>
 
 using namespace std;
+//#define DEBUG
+
+void logrotate()
+{
+    int fd = open("/var/log/isg/cached_test.log", O_CREAT | O_APPEND | O_LARGEFILE | O_WRONLY);
+	close(2);
+    dup2(fd, 2);
+	close(1);
+    dup2(fd, 1);
+    close(fd);
+//    setlinebuf(stdout);
+}
 
 void sig(int signum)
 {
 	std::cerr << "Signal " << signum << " received" << std::endl;
+	if(signum == SIGUSR1) {
+		std::cerr << "Rotating logs" << std::endl;
+	    logrotate();
+	}
 }
 
 int main(void) {
-/*    if(fork()) {
-		std::cout << "ISG Cache daemon started" << std::endl;
-		exit(0);
-    }
-*/
-/*    
-    close(0);
-    close(1);
-    close(2);
-    int fd = open("/var/log/isg_cached_test.log", O_CREAT | O_APPEND | O_LARGEFILE | O_WRONLY);
-    dup2(fd, 2);
-    dup2(fd, 1);
-    setlinebuf(stdout);
-
-    setuid(30);
-    setgid(8);
-*/    
-
+#ifndef DEBUG    
     signal(SIGPIPE, sig);
     signal(SIGTTOU, sig);
     signal(SIGKILL, sig);
     signal(SIGSTOP, sig);
-    Listener l("/tmp/test.sock");
-    l.start();
+    signal(SIGUSR1, sig);
 
+	struct passwd *r = getpwnam("wwwrun");
+	if(r == NULL) {
+		cerr << "Error looking for a user wwwrun" << endl;
+		return -1;
+	}
+	setuid(r->pw_uid);
+    setgid(r->pw_gid);
+
+    logrotate();
+#endif
+
+    Listener l("/tmp/l.sock");
+    l.start();
     return EXIT_SUCCESS;
 }

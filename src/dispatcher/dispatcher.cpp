@@ -22,12 +22,12 @@
 #include "dispatcher.h"
 #include "billing.h"
 #include "listener.h"
-#include "utils.h"
+
+#define IFEXIST(x) x.size()?x.at(0):""
 
 Dispatcher::Dispatcher(int socket, Billing &bill, Listener &l) : 
     DispatcherCOA(this, l), 
-    DispatcherOracle(this, bill),
-	DispatcherCBilling(this, l)
+    DispatcherOracle(this, bill)
 {
 	_sd = socket;
 	_ts = time(NULL);
@@ -38,7 +38,6 @@ Dispatcher::Dispatcher(int socket, Billing &bill, Listener &l) :
 	_xmlHandler->initialized = XML_SAX2_MAGIC;
 	_xmlHandler->startElement = &Dispatcher::parserStartElement;
 	_xmlHandler->endElement = &Dispatcher::parserEndElement;
-	_xmlHandler->characters = &Dispatcher::parserCharacters;
 	_xmlHandler->warning = &Dispatcher::parserWarning;
 	_xmlHandler->error = &Dispatcher::parserError;
 	_xmlHandler->endDocument = &Dispatcher::parserEndDocument;
@@ -47,6 +46,8 @@ Dispatcher::Dispatcher(int socket, Billing &bill, Listener &l) :
 	_depth = 0;
 	_params.clear();
 	_named_params.clear();
+	_empty_string.clear();
+	_empty_stringarray.clear();
 
 	_listener = &l;
 	_is_done = false;
@@ -73,7 +74,6 @@ void Dispatcher::timeout()
 	if(_is_processing == true) {
 	    DispatcherCOA::timeout();
 	    DispatcherOracle::timeout();
-	    DispatcherCBilling::timeout();
 	}
     unlock();
 }
@@ -138,8 +138,8 @@ bool Dispatcher::processQuery(std::string fullname)
     bool res;
     _is_processing = true;
     std::cerr << "Dispatcher" << std::endl;
-    if(res = DispatcherCOA::processQuery(fullname) || DispatcherOracle::processQuery(fullname) || DispatcherCBilling::processQuery(fullname)) {
-		std::cerr << "Processed " << std::endl;
+    if(res = DispatcherCOA::processQuery(fullname) || DispatcherOracle::processQuery(fullname)) {
+	std::cerr << "Processed " << std::endl;
     }
     _is_processing = false;
     return res;	
@@ -152,27 +152,47 @@ void Dispatcher::parserStartElement(void *ctx, const xmlChar * fullname, const x
 		d = ((Dispatcher*)ctx);
 	}
 
-	d->_tmpname = (const char*)fullname;
-	d->_tmpvalue = "";
-	std::cout << "Parsing " << (const char*) fullname << std::endl;
 	switch(d->_state) {
 		case WAIT_ROOT_EL:
 			if(!xmlStrcasecmp(fullname, BAD_CAST "query")) {
 				d->_state = READING_DATA;
 			} else {
 				std::cerr << "Error: root element is not query" << std::endl;
-				d->_state = FINISHING;
 				return;
 			}
 			break;
 		case READING_DATA:
-			while(attr != NULL && *attr != NULL) {
+			while(*attr != NULL) {
 			    d->_named_params[(const char*)*(attr)].push_back((const char*)*(attr+1));
 			    attr += 2;
 			}
-			d->_state = READING_ATTRIBS;	
+			
+			d->_state = WAIT_PARAMS;
 			break;
-		case READING_ATTRIBS:
+		case WAIT_PARAMS:
+			std::cerr << "waiting for params with level " << d->_depth << std::endl;
+			if(!xmlStrcasecmp(fullname, BAD_CAST "param")) {
+				std::cerr << "Reading params" << std::endl;
+				const char *name = NULL;
+				const char *value = NULL;
+				while(*attr != NULL) {
+					if(!xmlStrcasecmp(*attr, BAD_CAST "name")) {
+						name = (const char*)*(attr+1);
+					} else if(!xmlStrcasecmp(*attr, BAD_CAST "value")) {
+						value = (const char*)*(attr+1);
+					}
+
+					if(name != NULL && value != NULL)
+						break;
+					attr += 2;
+				}
+
+				if(name != NULL && value != NULL) {
+					std::cerr << "Adding attribute " << name << " with value " << value << std::endl;
+					d->_named_params[name].push_back(value);
+				}
+			}
+
 			break;
 		case FINISHING:
 			break;
@@ -189,42 +209,47 @@ void Dispatcher::parserEndElement(void *ctx, const xmlChar * fullname)
 		std::cerr << "Error - no dispatcher pointer" << std::endl;
 		return;
 	}
-	
-	if(d->_state == FINISHING) {
-		return;
-	}
-	if(d->_depth == 2) {
+
+	if(d->_depth == 2)
+	switch(d->_state) {
+		case WAIT_PARAMS:
 			if(d->processQuery((char*)fullname)) {
 				d->_state = FINISHING;
 			} else {
 				std::cerr << "Error: action element is not correct" << std::endl;
+				return;
 			}
-	} else if(d->_depth == 3 && d->_state == READING_ATTRIBS) {
-		d->_named_params[d->_tmpname].push_back(d->_tmpvalue);
+			break;
+		default:
+			break;
 	}
 	d->_depth--;
 }
 
-
-void Dispatcher::parserCharacters(void *ctx, const xmlChar * ch, int len)
+const std::string & Dispatcher::namedParam(const char *paramName) const
 {
-	Dispatcher *d = NULL;
-	if(ctx) {
-		d = ((Dispatcher*)ctx);
-	} else {
-		std::cerr << "Error - no dispatcher pointer" << std::endl;
-		return;
-	}
-
-	if(d->_state == FINISHING) {
-		return;
-	}
-	d->_tmpvalue.append((const char*)ch, len);
+	std::string _temp(paramName);
+	return namedParam(_temp);
 }
 
-std::string Dispatcher::namedParam(std::string paramName)
+const std::string & Dispatcher::namedParam(const std::string &paramName) const
 {
-    return IFEXIST(_named_params[paramName]);
+	std::map<std::string, std::vector<std::string> >::const_iterator i;
+	if((i = _named_params.find(paramName)) != _named_params.end() && i->second.size() > 0) {
+		return i->second.at(0); 
+	} else {
+		return _empty_string;
+	}
+}
+
+const std::vector<std::string> & Dispatcher::namedParams(const std::string &paramName) const
+{
+	std::map<std::string, std::vector<std::string> >::const_iterator i;
+	if((i = _named_params.find(paramName)) != _named_params.end()) {
+		return i->second; 
+	} else {
+		return _empty_stringarray;
+	}
 }
 
 void Dispatcher::parserWarning(void *ctx, const char *msg, ...)
@@ -390,9 +415,4 @@ std::string Dispatcher::getCache(std::string key)
 void Dispatcher::setCache(std::string key, std::string value, int timeout)
 {
     _listener->setValue(key, value, timeout);
-}
-
-requestParams& Dispatcher::namedParams()
-{
-	return _named_params;
 }

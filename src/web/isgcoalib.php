@@ -81,7 +81,12 @@ function coa_command_exec($coa_command, &$arr_services, $account_name = NULL, $a
     {
 	$coa_session_id = $_SERVER['REMOTE_ADDR'].':'.($_SERVER['REMOTE_PORT'] >> 5);
     }
-    else $coa_session_id = $_SERVER['REMOTE_ADDR'];
+    else if ($arr_octet[0] == 217 && $arr_octet[1] == 113 && $arr_octet[2] == 122 && ($arr_octet[3] & 192) == 240)
+    {	
+	$coa_session_id = $_SERVER['REMOTE_ADDR'].':'.($_SERVER['REMOTE_PORT'] >> 4);
+    } else {
+	$coa_session_id = $_SERVER['REMOTE_ADDR'];
+    }
 
     $retval = -1;
     $cache = new ISGCache();

@@ -14,22 +14,18 @@
 #include <string>
 #include "billing.h"
 #include "listener.h"
-#include "dis_coa.h"
-#include "dis_oracle.h"
-#include "dis_cbilling.h"
-#include "request_params.h"
+#include "coa.h"
+#include "oracle.h"
 
 enum stateEnum
 {
 	    WAIT_ROOT_EL,
 	    READING_DATA,
-		READING_ATTRIBS,
+		WAIT_PARAMS,
 	    FINISHING
 };
 
-//typedef std::map<std::string, std::vector<std::string> > requestParams;
-
-class Dispatcher : protected DispatcherCOA, protected DispatcherOracle, protected DispatcherCBilling
+class Dispatcher : protected DispatcherCOA, protected DispatcherOracle
 {
 public:
 	Dispatcher(int socket, Billing &bill, Listener &l);
@@ -46,8 +42,9 @@ public:
 
 	void sendResult(queryResult &r);
 	void sendString(std::string &data);
-	std::string namedParam(std::string paramName);
-	requestParams &namedParams();
+	const std::string & namedParam(const std::string &paramName) const;
+	const std::string & namedParam(const char *paramName) const;
+	const std::vector<std::string> & namedParams(const std::string &paramName) const;
 	
 	void lock();
 	void unlock();
@@ -59,7 +56,6 @@ protected:
 
 	static void parserStartElement(void *ctx, const xmlChar * fullname, const xmlChar ** attr);
 	static void parserEndElement(void *ctx, const xmlChar * fullname);
-	static void parserCharacters(void *ctx, const xmlChar * ch, int len);
 	static void parserWarning(void *ctx, const char *msg, ...);
 	static void parserError(void *ctx, const char *msg, ...);
 	static void parserEndDocument(void *ctx);
@@ -76,12 +72,12 @@ private:
 	stateEnum _state;
 	int _depth;
 	std::vector<std::string> _params;
-	requestParams _named_params;
+	std::map<std::string, std::vector<std::string> > _named_params;
 	Listener * _listener;
 	pthread_t _thread;
 	pthread_mutex_t _mutex;
-	std::string _tmpname;
-	std::string _tmpvalue;
+	std::string _empty_string;
+	std::vector<std::string> _empty_stringarray;
 };
 #endif
 
