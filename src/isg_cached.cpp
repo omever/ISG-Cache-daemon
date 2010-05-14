@@ -24,7 +24,7 @@
 #include <sstream>
 
 using namespace std;
-#define DEBUG
+//#define DEBUG
 
 void logrotate()
 {

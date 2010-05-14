@@ -18,6 +18,7 @@ protected:
 	int getOnlineData(std::string pbhk, std::string force);
 	int getIsgServices(std::string pbhk);
 	int getStaticIP(std::string ip, std::string server);
+	int getStatusDescription(std::string status);
 	int checkInitialSubscriber(std::string login, std::string password);
 	int querySQL(std::string sql, std::vector<std::string> params, std::string key = "", int timeout=0);
 

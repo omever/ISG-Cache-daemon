@@ -182,7 +182,7 @@ void Listener::warehouse()
 				std::cerr << "Cleaning up Dispatcher at 0x" << std::hex << (void*)(*i) << std::endl;
 				_children.erase(i);
 				delete(*i);
-			} else if(time(NULL) - (*i)->last_activity() > 2) {
+			} else if(time(NULL) - (*i)->last_activity() > 10) {
 				std::cerr << "Long running thread should be killed at 0x" << std::hex << (void*)(*i) << std::endl;
 				(*i)->timeout();
 			}
