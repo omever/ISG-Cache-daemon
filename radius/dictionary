@@ -1,0 +1,12 @@
+$INCLUDE /usr/share/freeradius/dictionary
+
+VALUE   Packet-Type                     CoA-Request             43
+VALUE   Packet-Type                     CoA-ACK                 44
+VALUE   Packet-Type                     CoA-NAK                 45
+
+
+BEGIN-VENDOR	Cisco
+ATTRIBUTE	Cisco-Account-Info					250	string
+ATTRIBUTE	Cisco-Command-Code					252	string
+ATTRIBUTE	Cisco-Subscriber-Password				249	string
+END-VENDOR  Cisco
