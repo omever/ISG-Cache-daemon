@@ -23,10 +23,7 @@ bool DispatcherOracle::processQuery(std::string &tagname)
     if(tagname == "check_initial_subscriber") {
 		checkInitialSubscriber(_d->namedParam("login"), _d->namedParam("password"));
     } else
-    if(tagname == "get_status_description") {
-		getStatusDescription(_d->namedParam("status"));
-    } else
-    if(tagname == "sql") {
+    if(tagname == "raw_sql") {
 		querySQL(_d->namedParam("sql"), _d->namedParams("arg"));
     } else {
 		return false;
@@ -107,30 +104,6 @@ int DispatcherOracle::getStaticIP(std::string ip, std::string server)
 
 		rv = _d->wrapResult(r);
 		_d->setCache(std::string("STATIC_IP:") + server + ":" + ip, rv, 600);
-	} else {
-		std::cerr << "Cache hit" << std::endl;
-	}
-
-	_d->sendString(rv);
-}
-
-int DispatcherOracle::getStatusDescription(std::string status)
-{
-	std::string rv = _d->getCache(std::string("STATUS_DESCRIPTION:") + status);
-	if(!rv.size()) {
-		std::cerr << "Reading from source " << std::endl;
-		queryResult r;
-		std::vector<std::string> arg;
-		arg.push_back(status);
-
-		_bi = new BillingInstance(*_bill);
-		_bi->querySQL("SELECT user_definition FROM bill_user_state WHERE state=:1", arg, r);
-
-		delete _bi;
-		_bi = NULL;
-
-		rv = _d->wrapResult(r);
-		_d->setCache(std::string("STATUS_DESCRIPTION:") + status, rv, 3600);
 	} else {
 		std::cerr << "Cache hit" << std::endl;
 	}

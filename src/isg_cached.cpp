@@ -24,17 +24,17 @@
 #include <sstream>
 
 using namespace std;
-//#define DEBUG
+#define DEBUG
 
 void logrotate()
 {
-    int fd = open("/var/log/isg/cached_test.log", O_CREAT | O_APPEND | O_LARGEFILE | O_WRONLY);
+    int fd = open("/var/log/isg/cached.log", O_CREAT | O_APPEND | O_LARGEFILE | O_WRONLY);
 	close(2);
     dup2(fd, 2);
 	close(1);
     dup2(fd, 1);
     close(fd);
-//    setlinebuf(stdout);
+    setlinebuf(stdout);
 }
 
 void sig(int signum)
