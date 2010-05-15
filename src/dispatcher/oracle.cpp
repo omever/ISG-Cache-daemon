@@ -120,8 +120,8 @@ int DispatcherOracle::getStatusDescription(std::string status)
 	if(!rv.size()) {
 		std::cerr << "Reading from source " << std::endl;
 		queryResult r;
-		std::vector<std::string> arg;
-		arg.push_back(status);
+		std::map<std::string, std::vector<std::string> > arg;
+		arg[":1"].push_back(status);
 
 		_bi = new BillingInstance(*_bill);
 		_bi->querySQL("SELECT user_definition FROM bill_user_state WHERE state=:1", arg, r);
@@ -174,7 +174,7 @@ int DispatcherOracle::querySQL(std::string sql, std::vector<std::string> params,
 
 		_bi = new BillingInstance(*_bill);
 
-		_bi->querySQL(sql, params, r);
+		_bi->querySQL(sql, _d->allNamedParams(), r);
 
 		delete _bi;
 		_bi = NULL;

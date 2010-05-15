@@ -175,6 +175,7 @@ void Dispatcher::parserStartElement(void *ctx, const xmlChar * fullname, const x
 				std::cerr << "Reading params" << std::endl;
 				const char *name = NULL;
 				const char *value = NULL;
+				if(attr != NULL)
 				while(*attr != NULL) {
 					if(!xmlStrcasecmp(*attr, BAD_CAST "name")) {
 						name = (const char*)*(attr+1);
@@ -250,6 +251,11 @@ const std::vector<std::string> & Dispatcher::namedParams(const std::string &para
 	} else {
 		return _empty_stringarray;
 	}
+}
+
+const std::map<std::string, std::vector<std::string> > & Dispatcher::allNamedParams() const
+{
+    return _named_params;
 }
 
 void Dispatcher::parserWarning(void *ctx, const char *msg, ...)

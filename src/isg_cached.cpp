@@ -65,7 +65,7 @@ int main(void) {
     logrotate();
 #endif
 
-    Listener l("/tmp/l.sock");
+    Listener l("/tmp/test.sock");
     l.start();
     return EXIT_SUCCESS;
 }

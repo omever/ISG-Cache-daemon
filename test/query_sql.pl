@@ -19,20 +19,28 @@ my $k = $num_query;
 
 srand (time ^ $$);
 while($k--) {
-	my $socket = new IO::Socket::UNIX(Type => SOCK_STREAM, Peer => '/tmp/l.sock');
+	my $socket = new IO::Socket::UNIX(Type => SOCK_STREAM, Peer => '/tmp/test.sock');
 	die "Error: $@" unless $socket;
 	my $r = int(rand(3000));
 	$socket->send(qq{<?xml version="1.0"?>\n});
-#$socket->send(qq{<query><raw_sql sql="select * from bill_user where login=:1 and user_type=:2"><param name='arg' value='om'/><param name='arg' value='homenet'/></raw_sql></query>});
+$socket->send(qq{
+<query>
+    <sql sql="select state from bill_user where login=:1 and user_type='content' and passwd=:2">
+	<param name='arg' value='om'/>
+	<param name='arg' value='12345'/>
+    </sql>
+</query>});
+=here
 	$socket->send(
 qq{<query>
-	<raw_sql sql="begin
+	<sql sql="begin
 			pkg_plan.plan_change(:1, :2);
 			end;">
 			<param name='arg' value='780486'/>
 			<param name='arg' value='2300'/>
 	</raw_sql>
 </query>});
+=cut
 	$socket->shutdown(1);
 
 	my $data;
