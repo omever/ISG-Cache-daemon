@@ -393,9 +393,9 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 		sb4 found;
 		OraText *bnvp[256], *invp[256];
 		ub1 bnvl[256], inpl[256], dupl[256];
-		
+
 		int retval = OCIStmtGetBindInfo(sth_oci, error, (ub4)256, (ub4)1, &found, bnvp, bnvl, invp, inpl, dupl, hndl);
-		
+
 		std::cerr << "Total " << found << " bound variables found! Error code = " << retval << std::endl;
 		for(int i = 0; i < found; ++i)
 		{
@@ -418,7 +418,7 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 		    }
 		}
 
-		OCIHandleFree((dvoid *)error, (ub4)OCI_HTYPE_ERROR);
+OCIHandleFree((dvoid *)error, (ub4)OCI_HTYPE_ERROR);
 		
 		std::cerr << "Query execute" << std::endl;
 		ResultSet *rs = NULL;
