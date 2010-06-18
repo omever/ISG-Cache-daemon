@@ -54,7 +54,7 @@ class ISGCache
 		$this->rv = array();
 	    }
 	    
-	    if($tag == "bind") {
+	    if(strtoupper($tag) == "BIND") {
 		array_push($this->tmp_stack, $this->tmp);
 		$this->tmp = 'bind';
 	    }
@@ -277,7 +277,7 @@ class ISGCache
 	return $this->rv;
     }
 
-    function sql($query, $args)
+    function sql($query, $args = array())
     {
 
 	$dom = new DOMDocument("1.0", "UTF-8");
