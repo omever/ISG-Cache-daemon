@@ -6,6 +6,8 @@
 #include <map>
 #include <pthread.h>
 
+#include "queryresult.h"
+
 namespace oracle {
 	namespace occi {
 		class Environment;
@@ -15,7 +17,6 @@ namespace oracle {
 	};
 };
 
-typedef std::vector<std::multimap<std::string, std::string> > queryResult;
 
 class Billing
 {

@@ -16,7 +16,6 @@
 #include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sstream>
 #include <errno.h>
 
 #include "dispatcher.h"
@@ -319,45 +318,7 @@ void Dispatcher::parserEndDocument(void *ctx)
 
 const std::string Dispatcher::wrapResult(queryResult &r)
 {
-	xmlDocPtr doc;
-	xmlNodePtr root;
-	int rc;
-	std::string returnValue;
-
-	doc = xmlNewDoc(BAD_CAST "1.0");
-	root = xmlNewNode(NULL, BAD_CAST "result");
-
-	std::stringstream temp;
-	temp << r.size();
-	xmlNewProp(root, BAD_CAST "count", BAD_CAST temp.str().c_str()); 
-	xmlDocSetRootElement(doc, root);
-
-
-	for(int i=0; i<r.size(); ++i) {
-		xmlNodePtr branch = xmlNewChild(root, NULL, BAD_CAST "branch", NULL);
-
-		std::multimap<std::string, std::string>::iterator it, iend = r.at(i).end();
-		for(it=r.at(i).begin(); it!=iend; ++it) {
-			std::cerr << "Add data: " << it->first << " = " << it->second << std::endl;
-			xmlNodePtr child = xmlNewChild(branch, NULL, BAD_CAST it->first.c_str(), BAD_CAST it->second.c_str());
-		}
-	}
-
-	xmlBufferPtr buf = xmlBufferCreate();
-	xmlSaveCtxtPtr sav = xmlSaveToBuffer(buf, "UTF-8", XML_SAVE_FORMAT | XML_SAVE_NO_EMPTY);
-
-	xmlSaveDoc(sav, doc);
-	xmlSaveClose(sav);
-
-	std::cerr << "Data: " << buf->use << "\n" << buf->content << std::endl;
-
-	returnValue = (char*)buf->content;
-
-	xmlBufferFree(buf);
-	xmlFreeDoc(doc);
-	//xmlCleanupParser();
-
-	return returnValue;
+	return r.to_xml();
 }
 
 int Dispatcher::resultHandler(void *ctx, const char* buffer, int len)

@@ -13,6 +13,8 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <cstring>
+
 #include "billing.h"
 
 using namespace oracle::occi;
@@ -410,16 +412,16 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 		    std::string par((char*)bnvp[i]);
 		    std::transform(par.begin(), par.end(), par.begin(), ::tolower);
 		    char * ptr = new char[BINDABLE_BUFFER_SIZE];
-		    _buffer[bnvp[i]] = ptr;
-			memset(ptr, 0, BINDABLE_BUFFER_SIZE);
+		    _buffer[(char*)bnvp[i]] = ptr;
+		    memset(ptr, 0, BINDABLE_BUFFER_SIZE);
 
 		    if((k = params.find(par)) != params.end() && k->second.size() >= 0) {
 				strncpy(ptr, k->second.at(0).c_str(), BINDABLE_BUFFER_SIZE-1);
-				alenp[bnvp[i]] = k->second.at(0).length();
-				indp[bnvp[i]] = 0;
+				alenp[(char*)bnvp[i]] = k->second.at(0).length();
+				indp[(char*)bnvp[i]] = 0;
 			} else {
-				alenp[bnvp[i]] = 0;
-				indp[bnvp[i]] = -1;
+				alenp[(char*)bnvp[i]] = 0;
+				indp[(char*)bnvp[i]] = -1;
 			}
 			std::cerr << "Bounding: " << OCIBindByName(
 			    sth_oci, 
@@ -428,11 +430,8 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 			    bnvp[i], 
 			    bnvl[i], 
 			    ptr, 
-			    BINDABLE_BUFFER_SIZE 
-			    SQLT_STR, &indp[bnvp[i]], &alenp[bnvp[i]], (ub2*)0, (ub4)0, (ub4*)0, (ub4)0) << std::endl;
-		    } else {
-			std::cerr << "Param " << (char*)bnvp[i] << " not found!" << std::endl;
-		    }
+			    BINDABLE_BUFFER_SIZE,
+			    SQLT_STR, (void*)&(indp[(char*)(bnvp[i])]), &(alenp[(char*)(bnvp[i])]), (ub2*)0, (ub4)0, (ub4*)0, (ub4)0) << std::endl;
 		}
 
 		OCIHandleFree((dvoid *)error, (ub4)OCI_HTYPE_ERROR);
@@ -473,8 +472,17 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 		}
 
 		std::map<std::string, char *>::iterator i, iend = _buffer.end();
+	        std::map<std::string, std::vector<std::string> >::const_iterator k;
 		for(i = _buffer.begin() ; i != iend ; ++i) {
-			
+		    std::string par(i->first);
+		    std::transform(par.begin(), par.end(), par.begin(), ::tolower);
+		    if(
+				    (k = params.find(par)) != params.end() 
+				    && k->second.at(0).compare(i->second) == 0 
+				    && indp[i->first] != -1)
+			    continue;
+
+		    _rv.add_bind(i->first, i->second, indp[i->first] == -1);
 		}
 		retval = 0;
 	}
