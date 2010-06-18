@@ -286,7 +286,7 @@ class ISGCache
 	$root = $dom->createElement("query");
 	$dom->appendChild($root);
 	
-	$sql = $dom->createElement("sql");
+	$sql = $dom->createElement("raw_sql");
 	$root->appendChild($sql);
 	
 	$attrib = $dom->createAttribute("sql");

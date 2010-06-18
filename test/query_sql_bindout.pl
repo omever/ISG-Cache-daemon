@@ -3,8 +3,8 @@
 use strict;
 use IO::Socket::UNIX;
 
-my $num_proc = 1;
-my $num_query = 1;
+my $num_proc = 3;
+my $num_query = 1000;
 
 # Preforking
 
@@ -26,8 +26,8 @@ while($k--) {
 	$socket->send(qq{<?xml version="1.0"?>\n});
 $socket->send(qq{
 <query>
-    <sql sql="begin test_om(:out); end;">
-    </sql>
+    <raw_sql sql="begin test_om(:out); end;">
+    </raw_sql>
 </query>});
 =here
 	$socket->send(

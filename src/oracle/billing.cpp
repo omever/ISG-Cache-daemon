@@ -411,6 +411,10 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 		    std::map<std::string, std::vector<std::string> >::const_iterator k;
 		    std::string par((char*)bnvp[i]);
 		    std::transform(par.begin(), par.end(), par.begin(), ::tolower);
+		    if(_buffer.count((char*)bnvp[i]) > 0) {
+			    std::cerr << "Double binded variable skipping doubles" << std::endl;
+			    continue;
+		    }
 		    char * ptr = new char[BINDABLE_BUFFER_SIZE];
 		    _buffer[(char*)bnvp[i]] = ptr;
 		    memset(ptr, 0, BINDABLE_BUFFER_SIZE);
@@ -495,6 +499,10 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 	if(sth != NULL) {
 		_conn->terminateStatement(sth);
 	}
+
+	std::map<std::string, char *>::iterator i, iend = _buffer.end();
+	for(i = _buffer.begin() ; i != iend ; ++i) 
+		delete [] (i->second);
 
 	return retval;
 }

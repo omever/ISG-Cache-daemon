@@ -55,7 +55,7 @@ Listener::~Listener()
 int Listener::start()
 {
 	try {
-		_bill.connect("BILLING", "BILL_DBA", "DjkuJLjycrbQ");
+		_bill.connect("VENSUS", "BILL_DBA", "DjkuJLjycrbQ");
 	}
 	catch (std::exception &ex) {
 		std::cerr << "Exception caught while executing query: " << ex.what() << std::endl;
