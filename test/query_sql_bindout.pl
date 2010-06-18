@@ -18,6 +18,7 @@ for(my $i=0; $i<$num_proc; $i++)
 my $k = $num_query;
 
 srand (time ^ $$);
+
 while($k--) {
 	my $socket = new IO::Socket::UNIX(Type => SOCK_STREAM, Peer => '/tmp/test.sock');
 	die "Error: $@" unless $socket;

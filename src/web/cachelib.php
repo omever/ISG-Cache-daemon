@@ -7,6 +7,7 @@ class ISGCache
     private $parser = null;
     private $rv = FALSE;
     private $tmp = 0;
+    private $tmp_stack = array();
     private $level = 0;
     private $current = null;
     private $codepage;
@@ -53,6 +54,11 @@ class ISGCache
 		$this->rv = array();
 	    }
 	    
+	    if($tag == "bind") {
+		array_push($this->tmp_stack, $this->tmp);
+		$this->tmp = 'bind';
+	    }
+	    
 	    $this->rv[$this->tmp] = array();
 	}
 	if($this->level == 3) {
@@ -65,9 +71,11 @@ class ISGCache
     {
 	$this->level--;
 	if($this->level == 1) {
-	    $i = count($this->rv[$this->tmp][$this->current]) - 1;
-	    $this->rv[$this->tmp][$this->current][$i] = trim($this->rv[$this->tmp][$this->current][$i]);
-	    $this->tmp++;
+	    if($this->tmp == 'bind') {
+		$this->tmp = array_shift($this->tmp_stack);
+	    } else {
+		$this->tmp++;
+	    }
 	    $this->current = null;
 	} else if($this->level == 2) {
 	    $i = count($this->rv[$this->tmp][$this->current]) - 1;

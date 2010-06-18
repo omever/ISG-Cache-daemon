@@ -417,7 +417,7 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 
 		    if((k = params.find(par)) != params.end() && k->second.size() >= 0) {
 				strncpy(ptr, k->second.at(0).c_str(), BINDABLE_BUFFER_SIZE-1);
-				alenp[(char*)bnvp[i]] = k->second.at(0).length();
+				alenp[(char*)bnvp[i]] = k->second.at(0).length()+1;
 				indp[(char*)bnvp[i]] = 0;
 			} else {
 				alenp[(char*)bnvp[i]] = 0;
