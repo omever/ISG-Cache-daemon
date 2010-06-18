@@ -45,7 +45,9 @@ using namespace oracle::occi;
       AND c.ip_num_min = ip2num(:1) \
       AND b.snmp_name = :2 \
       AND a.state = 'on'"
-      
+
+#define BINDABLE_BUFFER_SIZE 65536
+
 Billing::Billing()
 {
 	pthread_mutex_init(&__mutex, NULL);
@@ -381,6 +383,10 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 	int retval = 0;
 	Statement *sth = NULL;
 
+	std::map<std::string, char*> _buffer;
+	std::map<std::string, sb2> indp;
+	std::map<std::string, ub2> alenp;
+
 	try {
 		sth = _conn->createStatement(query);
 
@@ -403,22 +409,33 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 		    std::map<std::string, std::vector<std::string> >::const_iterator k;
 		    std::string par((char*)bnvp[i]);
 		    std::transform(par.begin(), par.end(), par.begin(), ::tolower);
-		    if((k = params.find(par)) != params.end() && k->second.size() > 0) {
+		    char * ptr = new char[BINDABLE_BUFFER_SIZE];
+		    _buffer[bnvp[i]] = ptr;
+			memset(ptr, 0, BINDABLE_BUFFER_SIZE);
+
+		    if((k = params.find(par)) != params.end() && k->second.size() >= 0) {
+				strncpy(ptr, k->second.at(0).c_str(), BINDABLE_BUFFER_SIZE-1);
+				alenp[bnvp[i]] = k->second.at(0).length();
+				indp[bnvp[i]] = 0;
+			} else {
+				alenp[bnvp[i]] = 0;
+				indp[bnvp[i]] = -1;
+			}
 			std::cerr << "Bounding: " << OCIBindByName(
 			    sth_oci, 
 			    &hndl[i], 
 			    error, 
 			    bnvp[i], 
 			    bnvl[i], 
-			    (text*)k->second.at(0).c_str(), 
-			    k->second.at(0).length()+1, 
-			    SQLT_STR, (dvoid*)0, (ub2*)0, (ub2*)0, (ub4)0, (ub4*)0, (ub4)0) << std::endl;
+			    ptr, 
+			    BINDABLE_BUFFER_SIZE 
+			    SQLT_STR, &indp[bnvp[i]], &alenp[bnvp[i]], (ub2*)0, (ub4)0, (ub4*)0, (ub4)0) << std::endl;
 		    } else {
 			std::cerr << "Param " << (char*)bnvp[i] << " not found!" << std::endl;
 		    }
 		}
 
-OCIHandleFree((dvoid *)error, (ub4)OCI_HTYPE_ERROR);
+		OCIHandleFree((dvoid *)error, (ub4)OCI_HTYPE_ERROR);
 		
 		std::cerr << "Query execute" << std::endl;
 		ResultSet *rs = NULL;
@@ -453,6 +470,11 @@ OCIHandleFree((dvoid *)error, (ub4)OCI_HTYPE_ERROR);
 				}
 			}
 			sth->closeResultSet(rs);
+		}
+
+		std::map<std::string, char *>::iterator i, iend = _buffer.end();
+		for(i = _buffer.begin() ; i != iend ; ++i) {
+			
 		}
 		retval = 0;
 	}
