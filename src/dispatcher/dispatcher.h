@@ -45,6 +45,7 @@ public:
 	const std::string & namedParam(const std::string &paramName) const;
 	const std::string & namedParam(const char *paramName) const;
 	const std::vector<std::string> & namedParams(const std::string &paramName) const;
+	const std::map<std::string, std::vector<std::string> > & allNamedParams() const;
 	
 	void lock();
 	void unlock();

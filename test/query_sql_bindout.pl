@@ -18,6 +18,7 @@ for(my $i=0; $i<$num_proc; $i++)
 my $k = $num_query;
 
 srand (time ^ $$);
+
 while($k--) {
 	my $socket = new IO::Socket::UNIX(Type => SOCK_STREAM, Peer => '/tmp/test.sock');
 	die "Error: $@" unless $socket;
@@ -25,9 +26,7 @@ while($k--) {
 	$socket->send(qq{<?xml version="1.0"?>\n});
 $socket->send(qq{
 <query>
-    <sql sql="select state from bill_user where login=:1 and user_type='content' and passwd=:2">
-	<param name='arg' value='om'/>
-	<param name='arg' value='12345'/>
+    <sql sql="begin test_om(:out); end;">
     </sql>
 </query>});
 =here
