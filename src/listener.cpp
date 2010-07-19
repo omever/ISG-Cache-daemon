@@ -19,11 +19,9 @@
 #include "dispatcher/dispatcher.h"
 
 #define UNIX_PATH_MAX	108
-Listener::Listener(std::string socket)
+Listener::Listener(std::string config)
+	: Configuration(config)
 {
-	_path = socket;
-	unlink(_path.c_str());
-
 	_mc = memcached_create(NULL);
 	memcached_return rc;
 
@@ -40,6 +38,8 @@ Listener::Listener(std::string socket)
 	dict.parse(DATADIR "/isg_cached/radius/dictionary");
 
 	_sequence = 0;
+
+	Configuration::load();
 }
 
 Listener::~Listener()
@@ -55,12 +55,14 @@ Listener::~Listener()
 int Listener::start()
 {
 	try {
-		_bill.connect("VENSUS", "BILL_DBA", "DjkuJLjycrbQ");
+		_bill.connect(get("ORACLE:SID"), get("ORACLE:USER"), get("ORACLE:PASSWORD"));
 	}
 	catch (std::exception &ex) {
 		std::cerr << "Exception caught while executing query: " << ex.what() << std::endl;
 		return -1;
 	}
+
+	unlink(get("MAIN:socket").c_str());
 
 	_sd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if(_sd == -1) {
@@ -70,7 +72,7 @@ int Listener::start()
 
 	struct sockaddr_un addr;
 	socklen_t len = sizeof(addr);
-	snprintf(addr.sun_path, UNIX_PATH_MAX, "%s", _path.c_str());
+	snprintf(addr.sun_path, UNIX_PATH_MAX, "%s", get("MAIN:socket").c_str());
 	addr.sun_family = AF_UNIX;
 
 	if(bind(_sd, (struct sockaddr *)&addr, len) != 0) {

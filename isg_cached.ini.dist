@@ -1,0 +1,10 @@
+[MAIN]
+debug = true
+socket = /tmp/test.sock
+userid = wwwrun
+
+[ORACLE]
+SID = MYSID
+USER = DBA
+PASSWORD = DBAPASS
+

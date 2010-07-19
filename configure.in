@@ -1,4 +1,4 @@
-AC_INIT([isg_cached], [1.1], [omever@gmail.com])
+AC_INIT([isg_cached], [1.2], [omever@gmail.com])
 
 AX_LIB_ORACLE_OCI()
 PKG_CHECK_MODULES(XML, libxml-2.0 >= 2.0)

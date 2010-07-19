@@ -16,13 +16,14 @@
 
 #include "oracle/billing.h"
 #include "radius/dictionary.h"
+#include "configuration.h"
 
 class Dispatcher;
 
-class Listener
+class Listener : public Configuration
 {
 public:
-	Listener(std::string socket);
+	Listener(std::string config);
 	~Listener();
 	int start();
 	const std::string getValue(const std::string &key);

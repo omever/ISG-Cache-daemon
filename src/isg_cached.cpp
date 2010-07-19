@@ -46,26 +46,40 @@ void sig(int signum)
 	}
 }
 
-int main(void) {
-#ifndef DEBUG    
-    signal(SIGPIPE, sig);
-    signal(SIGTTOU, sig);
-    signal(SIGKILL, sig);
-    signal(SIGSTOP, sig);
-    signal(SIGUSR1, sig);
+int main(int argc, char ** argv) {
+	string file = "/etc/cached.ini";
 
-	struct passwd *r = getpwnam("wwwrun");
-	if(r == NULL) {
-		cerr << "Error looking for a user wwwrun" << endl;
+	if(argc > 1)
+		file = argv[1];
+
+	try {
+		Listener l(file);
+		cerr << "Debug: " << l.get("MAIN:debug") << endl;
+		if(l.get("MAIN:debug") != "true") {
+			signal(SIGPIPE, sig);
+			signal(SIGTTOU, sig);
+			signal(SIGKILL, sig);
+			signal(SIGSTOP, sig);
+			signal(SIGUSR1, sig);
+
+			string user = l.get("MAIN:userid");
+			if(user.length()) {
+				struct passwd *r = getpwnam(user.c_str());
+				if(r == NULL) {
+					cerr << "Error looking for a user wwwrun" << endl;
+					return -1;
+				}
+				setuid(r->pw_uid);
+				setgid(r->pw_gid);
+			}
+			logrotate();
+		}
+
+		l.start();
+	}
+	catch (exception &e) {
+		cerr << "Exception caught: " << e.what() << endl;
 		return -1;
 	}
-	setuid(r->pw_uid);
-    setgid(r->pw_gid);
-
-    logrotate();
-#endif
-
-    Listener l("/tmp/test.sock");
-    l.start();
     return EXIT_SUCCESS;
 }
