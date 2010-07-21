@@ -216,6 +216,7 @@ void Dispatcher::parserEndElement(void *ctx, const xmlChar * fullname)
 			if(d->processQuery((char*)fullname)) {
 				d->_state = FINISHING;
 			} else {
+				d->error("action element is not correct");
 				std::cerr << "Error: action element is not correct" << std::endl;
 				return;
 			}
