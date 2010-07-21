@@ -30,7 +30,7 @@ void Configuration::load()
 	if(__file.empty())
 		throw NoFileException();
 
-	__d = iniparser_load(__file.c_str());
+	__d = iniparser_load((char*)__file.c_str());
 	if(__d == NULL)
 		throw DictionaryLoadException();
 }
@@ -52,7 +52,7 @@ void Configuration::save()
 
 std::string Configuration::get(const std::string & key)
 {
-	return string(iniparser_getstr(__d, key.c_str()));
+	return string(iniparser_getstr(__d, (char*)key.c_str()));
 }
 
 void Configuration::set(const std::string & key, const std::string & value)
