@@ -9,14 +9,18 @@
 #include <string>
 #include <iostream>
 #include <cassert>
+#include <sstream>
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/stat.h>
 #include <errno.h>
 
 #include "listener.h"
 #include "dispatcher/dispatcher.h"
+
+using namespace std;
 
 #define UNIX_PATH_MAX	108
 Listener::Listener(std::string config)
@@ -78,6 +82,15 @@ int Listener::start()
 	if(bind(_sd, (struct sockaddr *)&addr, len) != 0) {
 		std::cerr << "Error binding to listener socket: " << strerror(errno) << std::endl;
 		return -1;
+	}
+
+	if(get("MAIN:mode").size()) {
+		stringstream tmp(get("MAIN:mode"));
+		mode_t mode;
+		tmp >> oct >> mode;
+		mode &= 0777;
+		std::cerr << "Setting listener socket to mode " << mode << std::endl;
+		chmod(addr.sun_path, mode);
 	}
 
 	if(listen(_sd, SOMAXCONN) != 0) {

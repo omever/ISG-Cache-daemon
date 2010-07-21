@@ -52,7 +52,10 @@ void Configuration::save()
 
 std::string Configuration::get(const std::string & key)
 {
-	return string(iniparser_getstr(__d, key.c_str()));
+	char * tmp = iniparser_getstr(__d, key.c_str());
+	if(tmp == NULL)
+		return string();
+	return string(tmp);
 }
 
 void Configuration::set(const std::string & key, const std::string & value)

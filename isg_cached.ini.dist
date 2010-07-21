@@ -2,6 +2,7 @@
 debug = true
 socket = /tmp/test.sock
 userid = wwwrun
+mode = 0777
 
 [ORACLE]
 SID = MYSID
