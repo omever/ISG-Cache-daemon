@@ -44,6 +44,7 @@ Listener::Listener(std::string config)
 	_sequence = 0;
 
 	Configuration::load();
+	Configuration::dump();
 }
 
 Listener::~Listener()
