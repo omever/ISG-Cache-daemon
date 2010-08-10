@@ -53,8 +53,8 @@ using namespace oracle::occi;
 Billing::Billing()
 {
 	pthread_mutex_init(&__mutex, NULL);
-	__env = Environment::createEnvironment("UTF8", "UTF8", Environment::THREADED_MUTEXED);
 	__pool = NULL;
+	__env = Environment::createEnvironment("UTF8", "UTF8", Environment::THREADED_MUTEXED);
 }
 
 Billing::Billing(std::string connstr, std::string username, std::string password)
@@ -71,8 +71,11 @@ Environment* Billing::getEnv()
 Billing::~Billing()
 {
 	pthread_mutex_destroy(&__mutex);
-	__env->terminateStatelessConnectionPool(__pool);
-	Environment::terminateEnvironment(__env);
+	if(__env != NULL) {
+		if(__pool != NULL)
+			__env->terminateStatelessConnectionPool(__pool);
+		Environment::terminateEnvironment(__env);
+	}
 }
 
 void Billing::connect(std::string connstr, std::string username, std::string password)

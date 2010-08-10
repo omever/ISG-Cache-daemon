@@ -24,11 +24,16 @@
 #include <sstream>
 
 using namespace std;
-//#define DEBUG
+
+static Listener *__global_l;
 
 void logrotate()
 {
-    int fd = open("/var/log/isg/cached.log", O_CREAT | O_APPEND | O_LARGEFILE | O_WRONLY);
+    string logfile("/var/log/isg/cached.log");
+    if(__global_l != NULL)
+	logfile = __global_l->get("MAIN:logfile");
+	
+    int fd = open(logfile.c_str(), O_CREAT | O_APPEND | O_LARGEFILE | O_WRONLY);
 	close(2);
     dup2(fd, 2);
 	close(1);
@@ -47,6 +52,9 @@ void sig(int signum)
 }
 
 int main(int argc, char ** argv) {
+
+	__global_l = NULL;
+	
 	string file = "/etc/cached.ini";
 
 	if(argc > 1)
@@ -54,6 +62,9 @@ int main(int argc, char ** argv) {
 
 	try {
 		Listener l(file);
+		
+		__global_l = &l;
+		
 		cerr << "Debug: " << l.get("MAIN:debug") << endl;
 		if(l.get("MAIN:debug") != "true") {
 			signal(SIGPIPE, sig);
@@ -79,6 +90,7 @@ int main(int argc, char ** argv) {
 	}
 	catch (exception &e) {
 		cerr << "Exception caught: " << e.what() << endl;
+		cerr << "While loading configuration " << file << endl;
 		return -1;
 	}
     return EXIT_SUCCESS;
