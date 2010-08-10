@@ -56,6 +56,7 @@ class ISGCache
 	{
 		if(isset($this) && get_class($this) == 'ISGCache') {
 			fclose($this->socket);
+			$this->socket = false;
 			return true;
 		} else {
 			fwrite(2, "Disconnect should be called from instance\n");
