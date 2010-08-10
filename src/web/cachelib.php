@@ -1,5 +1,7 @@
 <?php
 
+class alreadyConnectedException extends Exception {};
+
 class ISGCache
 {
 	public $socketPath = '/tmp/test.sock';
@@ -12,6 +14,11 @@ class ISGCache
 	private $current = null;
 	private $codepage;
 
+	function __construct($codepage = "utf8")
+	{
+		$this->codepage = $codepage;
+	}
+	
 	function putlog($text)
 	{
 		$fd = fopen("/var/log/isg/cachelib_test.log", "a");
@@ -21,6 +28,10 @@ class ISGCache
 
 	function connect($cp = "koi8-r")
 	{
+		if($this->socket != false) {
+			throw alreadyConnectedException("Already connected. Disconnect first");
+		}
+		
 		$this->codepage = $cp;
 		$this->rv = FALSE;
 		$this->tmp = 0;
