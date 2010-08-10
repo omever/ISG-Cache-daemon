@@ -10,10 +10,7 @@
 
 #include <string>
 #include <exception>
-
-extern "C" {
-#include <iniparser.h>
-}
+#include <map>
 
 class NoFileException: public std::exception
 {
@@ -52,10 +49,10 @@ public:
 	std::string get(const std::string &key);
 	void set(const std::string &key, const std::string &value);
 
-
+	void dump();
 private:
 	std::string __file;
-	dictionary * __d;
+	std::map<std::string, std::string> __data;
 };
 
 #endif /* CONFIGURATION_H_ */
