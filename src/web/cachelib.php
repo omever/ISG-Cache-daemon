@@ -4,7 +4,7 @@ class alreadyConnectedException extends Exception {};
 
 class ISGCache
 {
-	public $socketPath = '/tmp/test.sock';
+	public $socketPath;
 	private $socket = null;
 	private $parser = null;
 	private $rv = FALSE;
@@ -14,9 +14,13 @@ class ISGCache
 	private $current = null;
 	private $codepage;
 
-	function __construct($codepage = "utf8")
+	function __construct($codepage = "utf8", $socketPath = null)
 	{
 		$this->codepage = $codepage;
+		if($socketPath == null) {
+			$conf = parse_ini_file('/etc/cached.ini', true);
+			$this->socketPath = $conf["MAIN"]["socket"];
+		}
 	}
 	
 	function putlog($text)
