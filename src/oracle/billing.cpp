@@ -392,6 +392,8 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 	std::map<std::string, sb2> indp;
 	std::map<std::string, ub2> alenp;
 
+	_buffer.clear();
+
 	try {
 		sth = _conn->createStatement(query);
 
@@ -478,18 +480,20 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 			sth->closeResultSet(rs);
 		}
 
-		std::map<std::string, char *>::iterator i, iend = _buffer.end();
-	        std::map<std::string, std::vector<std::string> >::const_iterator k;
-		for(i = _buffer.begin() ; i != iend ; ++i) {
-		    std::string par(i->first);
-		    std::transform(par.begin(), par.end(), par.begin(), ::tolower);
-		    if(
-				    (k = params.find(par)) != params.end() 
-				    && k->second.at(0).compare(i->second) == 0 
-				    && indp[i->first] != -1)
-			    continue;
+		if(_buffer.size()) {
+			std::map<std::string, char *>::iterator i, iend = _buffer.end();
+			std::map<std::string, std::vector<std::string> >::const_iterator k;
+			for(i = _buffer.begin() ; i != iend ; ++i) {
+				std::string par(i->first);
+				std::transform(par.begin(), par.end(), par.begin(), ::tolower);
+				if(
+						(k = params.find(par)) != params.end()
+						&& k->second.at(0).compare(i->second) == 0
+						&& indp[i->first] != -1)
+					continue;
 
-		    _rv.add_bind(i->first, i->second, indp[i->first] == -1);
+				_rv.add_bind(i->first, i->second, indp[i->first] == -1);
+			}
 		}
 		retval = 0;
 	}
