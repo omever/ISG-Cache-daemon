@@ -20,6 +20,8 @@ class ISGCache
 		if($socketPath == null) {
 			$conf = parse_ini_file('/etc/cached.ini', true);
 			$this->socketPath = $conf["MAIN"]["socket"];
+		} else {
+			$this->socketPath = $socketPath;
 		}
 	}
 	
@@ -93,8 +95,8 @@ class ISGCache
 	{
 		$this->level--;
 		if($this->level == 1) {
-			if($this->tmp == 'bind') {
-				$this->tmp = array_shift($this->tmp_stack);
+			if($this->tmp === 'bind') {
+				$this->tmp = array_pop($this->tmp_stack);
 			} else {
 				$this->tmp++;
 			}
