@@ -126,11 +126,11 @@ LIBOBJS =
 LIBS = 
 LTLIBOBJS = 
 MAKEINFO = ${SHELL} /home/om/isg_cached/missing --run makeinfo
-MEMCACHED_CFLAGS = -I/usr/local/include  
-MEMCACHED_LIBS = -L/usr/local/lib -lmemcached  
+MEMCACHED_CFLAGS =  
+MEMCACHED_LIBS = -lmemcached  
 OBJEXT = o
-ORACLE_OCI_CFLAGS = -I/usr/include/oracle/11.1.0.1/client64/
-ORACLE_OCI_LDFLAGS = -L/usr/lib/oracle/11.1.0.1/client64/lib/ -lclntsh
+ORACLE_OCI_CFLAGS = -I/usr/include/oracle/11.2/client64/
+ORACLE_OCI_LDFLAGS = -L/usr/lib/oracle/11.2/client64/lib/ -lclntsh
 ORACLE_OCI_VERSION = 
 PACKAGE = isg_cached
 PACKAGE_BUGREPORT = omever@gmail.com
@@ -180,7 +180,7 @@ AM_CXXFLAGS = -DDATADIR='"$(datadir)"' -Isrc -Isrc/dispatcher -Isrc/oracle -Isrc
 ACLOCAL_AMFLAGS = -I m4
 # find * -name \*.h -or -name \*.cpp | xargs echo
 isg_cached_SOURCES = config.h src/listener.h src/main.cpp src/isg_cached.cpp src/oracle/billing.h src/oracle/billing.cpp src/oracle/queryresult.h src/oracle/queryresult.cpp src/radius/radclient.h src/radius/coapacket.h src/radius/radpacket.cpp src/radius/radpacket.h src/radius/dictionary.cpp src/radius/dictionary.h src/radius/coapacket.cpp src/radius/radclient.cpp src/listener.cpp src/dispatcher/coa.cpp src/dispatcher/oracle.cpp src/dispatcher/coa.h src/dispatcher/dispatcher.cpp src/dispatcher/oracle.h src/dispatcher/dispatcher.h src/configuration.h src/configuration.cpp
-isg_cached_LDADD = -locci -lclntsh -lxml2 -lmemcached -lssl -lpthread -liniparser $(ORACLE_OCI_LDFLAGS) $(XML_LIBS) $(MEMCACHED_LIBS)
+isg_cached_LDADD = -locci -lclntsh -lxml2 -lmemcached -lssl -lpthread $(ORACLE_OCI_LDFLAGS) $(XML_LIBS) $(MEMCACHED_LIBS)
 isg_cached_DATA = radius/dictionary
 isg_cacheddir = $(datadir)/isg_cached/radius
 all: config.h
@@ -577,7 +577,7 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
-	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
+	-find $(distdir) -type d ! -perm -755 -exec chmod a+rwx,go+rx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -444 -exec $(SHELL) $(install_sh) -c -m a+r {} {} \; \
