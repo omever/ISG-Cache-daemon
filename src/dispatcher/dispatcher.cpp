@@ -140,12 +140,17 @@ bool Dispatcher::processQuery(std::string fullname)
     bool res;
     _is_processing = true;
     std::cerr << "Dispatcher" << std::endl;
-    if(fullname == "store") {
-    	res = storeData();
-    } else if(fullname == "restore") {
-    	res = restoreData();
-    } else if(res = DispatcherCOA::processQuery(fullname) || DispatcherOracle::processQuery(fullname)) {
-    	std::cerr << "Processed " << std::endl;
+    try {
+    	if(fullname == "store") {
+    		res = storeData();
+    	} else if(fullname == "restore") {
+    		res = restoreData();
+    	} else if(res = DispatcherCOA::processQuery(fullname) || DispatcherOracle::processQuery(fullname)) {
+    		std::cerr << "Processed " << std::endl;
+    	}
+    }
+    catch (exception &e){
+    	sendString("сукебляде");
     }
     _is_processing = false;
     return res;	
@@ -161,6 +166,7 @@ bool Dispatcher::storeData()
 
 	setCache(namedParam("key"), namedParam("value"), timeout);
 	queryResult res;
+	res.resize(1);
 	res[0].insert(make_pair("result", "1"));
 	sendString(res.to_xml());
 	return true;
@@ -169,6 +175,7 @@ bool Dispatcher::storeData()
 bool Dispatcher::restoreData()
 {
 	queryResult res;
+	res.resize(1);
 	res[0].insert(make_pair("result", getCache(namedParam("key"))));
 	sendString(res.to_xml());
 	return true;

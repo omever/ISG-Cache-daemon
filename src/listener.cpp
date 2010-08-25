@@ -29,7 +29,7 @@ Listener::Listener(std::string config)
 	_mc = memcached_create(NULL);
 	memcached_return rc;
 
-	_mc_servers = memcached_server_list_append(NULL, "127.0.0.1", 0, &rc);
+	_mc_servers = memcached_server_list_append(NULL, "127.0.0.1", 11211, &rc);
 	assert(rc == MEMCACHED_SUCCESS);
 
 	rc = memcached_server_push(_mc, _mc_servers);
