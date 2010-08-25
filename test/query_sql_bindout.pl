@@ -4,7 +4,7 @@ use strict;
 use IO::Socket::UNIX;
 
 my $num_proc = 3;
-my $num_query = 10;
+my $num_query = 1000;
 
 # Preforking
 
@@ -20,7 +20,7 @@ my $k = $num_query;
 srand (time ^ $$);
 
 while($k--) {
-	my $socket = new IO::Socket::UNIX(Type => SOCK_STREAM, Peer => '/tmp/cached.sock');
+	my $socket = new IO::Socket::UNIX(Type => SOCK_STREAM, Peer => '/tmp/test.sock');
 	die "Error: $@" unless $socket;
 	my $r = int(rand(3000));
 	$socket->send(qq{<?xml version="1.0"?>\n});
