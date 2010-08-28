@@ -2,7 +2,18 @@ AC_INIT([isg_cached], [1.2], [omever@gmail.com])
 
 AX_LIB_ORACLE_OCI()
 PKG_CHECK_MODULES(XML, libxml-2.0 >= 2.0)
-PKG_CHECK_MODULES(MEMCACHED, libmemcached)
+
+AC_MSG_CHECKING([whether libmemcache support requested])
+AC_ARG_WITH([libmemcache],
+[  --with-libmemcache      build with libmemcache support],
+[ if test "$with_libmemcache" = "yes"; then 
+	 PKG_CHECK_MODULES(MEMCACHED, libmemcached)
+     AC_DEFINE(ENABLE_LIBMEMCACHE, [], [Libmemcache support enabled])
+     AC_MSG_RESULT([yes])
+  else
+     AC_MSG_RESULT([no])
+  fi
+], [AC_MSG_RESULT([no])])
 
 AC_PROG_CXX
 AC_CONFIG_FILES([Makefile])
@@ -10,3 +21,4 @@ AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE([1.9 foreign])
 
 AC_OUTPUT
+

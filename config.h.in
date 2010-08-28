@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.in by autoheader.  */
 
+/* Libmemcache support enabled */
+#undef ENABLE_LIBMEMCACHE
+
 /* Name of package */
 #undef PACKAGE
 

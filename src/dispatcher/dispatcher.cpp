@@ -108,8 +108,11 @@ bool Dispatcher::is_done()
 void * Dispatcher::thread_handle(void * arg)
 {
 	Dispatcher *d = (Dispatcher*) arg;
+	Listener *l = NULL;
 	if(d) {
+		l = d->_listener;
 		d->mainloop();
+		l->remove_child(d);
 	}
 	pthread_exit(NULL);
 }
@@ -158,7 +161,7 @@ bool Dispatcher::processQuery(std::string fullname)
 
 bool Dispatcher::storeData()
 {
-	time_t timeout = 600;
+	time_t timeout = 60;
 	if(_named_params.count("timeout")) {
 		stringstream stream(namedParam("timeout"));
 		stream >> timeout;
