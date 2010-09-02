@@ -11,7 +11,6 @@
 
 #include <string>
 #include <list>
-#include <libmemcached/memcached.h>
 #include <pthread.h>
 
 #include "oracle/billing.h"
