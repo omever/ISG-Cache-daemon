@@ -41,7 +41,7 @@ public:
 	void error(std::string errorstring);
 
 	void sendResult(queryResult &r);
-	void sendString(std::string &data);
+	void sendString(const std::string &data);
 	const std::string & namedParam(const std::string &paramName) const;
 	const std::string & namedParam(const char *paramName) const;
 	const std::vector<std::string> & namedParams(const std::string &paramName) const;
@@ -64,6 +64,8 @@ protected:
 	static int closeHandler(void *ctx);
 
 	bool processQuery(std::string fullname);
+	bool storeData();
+	bool restoreData();
 private:
 	int _sd;
 	int _ts;

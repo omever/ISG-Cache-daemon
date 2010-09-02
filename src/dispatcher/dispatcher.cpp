@@ -14,6 +14,7 @@
 #include <libxml/xmlsave.h>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <errno.h>
@@ -21,6 +22,8 @@
 #include "dispatcher.h"
 #include "billing.h"
 #include "listener.h"
+
+using namespace std;
 
 #define IFEXIST(x) x.size()?x.at(0):""
 
@@ -105,8 +108,11 @@ bool Dispatcher::is_done()
 void * Dispatcher::thread_handle(void * arg)
 {
 	Dispatcher *d = (Dispatcher*) arg;
+	Listener *l = NULL;
 	if(d) {
+		l = d->_listener;
 		d->mainloop();
+		l->remove_child(d);
 	}
 	pthread_exit(NULL);
 }
@@ -137,11 +143,45 @@ bool Dispatcher::processQuery(std::string fullname)
     bool res;
     _is_processing = true;
     std::cerr << "Dispatcher" << std::endl;
-    if(res = DispatcherCOA::processQuery(fullname) || DispatcherOracle::processQuery(fullname)) {
-	std::cerr << "Processed " << std::endl;
+    try {
+    	if(fullname == "store") {
+    		res = storeData();
+    	} else if(fullname == "restore") {
+    		res = restoreData();
+    	} else if(res = DispatcherCOA::processQuery(fullname) || DispatcherOracle::processQuery(fullname)) {
+    		std::cerr << "Processed " << std::endl;
+    	}
+    }
+    catch (exception &e){
+    	sendString("сукебляде");
     }
     _is_processing = false;
     return res;	
+}
+
+bool Dispatcher::storeData()
+{
+	time_t timeout = 60;
+	if(_named_params.count("timeout")) {
+		stringstream stream(namedParam("timeout"));
+		stream >> timeout;
+	}
+
+	setCache(namedParam("key"), namedParam("value"), timeout);
+	queryResult res;
+	res.resize(1);
+	res[0].insert(make_pair("result", "1"));
+	sendString(res.to_xml());
+	return true;
+}
+
+bool Dispatcher::restoreData()
+{
+	queryResult res;
+	res.resize(1);
+	res[0].insert(make_pair("result", getCache(namedParam("key"))));
+	sendString(res.to_xml());
+	return true;
 }
 
 void Dispatcher::parserStartElement(void *ctx, const xmlChar * fullname, const xmlChar ** attr)
@@ -353,7 +393,7 @@ int Dispatcher::closeHandler(void *ctx)
 	return 0;
 }
 
-void Dispatcher::sendString(std::string &data)
+void Dispatcher::sendString(const std::string &data)
 {
 	send(_sd, data.c_str(), data.length(), 0);
 	shutdown(_sd, 2);

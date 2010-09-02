@@ -33,7 +33,7 @@ $socket->send(qq{
 =here
 	$socket->send(
 qq{<query>
-	<sql sql="begin
+	<raw_sql sql="begin
 			pkg_plan.plan_change(:1, :2);
 			end;">
 			<param name='arg' value='780486'/>
