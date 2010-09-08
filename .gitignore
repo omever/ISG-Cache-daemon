@@ -8,3 +8,6 @@ config.status
 isg_cached-1.2.tar.gz
 stamp-h1
 Makefile.in
+*.o
+cached.ini
+isg_cached
