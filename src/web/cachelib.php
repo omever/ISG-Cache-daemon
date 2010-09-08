@@ -325,29 +325,6 @@ class ISGCache
 			$value->appendChild($dom->createTextNode($v));
 		}
 
-		$sql = $dom->createElement("raw_sql");
-		$root->appendChild($sql);
-
-		$attrib = $dom->createAttribute("sql");
-		$sql->appendChild($attrib);
-		$attrib->appendChild($dom->createTextNode($query));
-
-		foreach ($args as $n => $v) {
-			$ch = $dom->createElement("param");
-			$sql->appendChild($ch);
-
-			$name = $dom->createAttribute("name");
-			$ch->appendChild($name);
-			$name->appendChild($dom->createTextNode($n));
-
-			$value = $dom->createAttribute("value");
-			$ch->appendChild($value);
-			$value->appendChild($dom->createTextNode($v));
-		}
-
-		echo $dom->saveXML();
-		$this->query($dom->saveXML());
-
 		return $this->rv;
 	}
 	

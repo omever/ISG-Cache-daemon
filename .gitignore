@@ -1,0 +1,10 @@
+.deps/
+Makefile
+autom4te.cache/
+config.h
+config.h.in~
+config.log
+config.status
+isg_cached-1.2.tar.gz
+stamp-h1
+Makefile.in

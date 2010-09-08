@@ -29,7 +29,7 @@ RadClient::RadClient(std::string server, unsigned short port, std::string secret
 RadClient::~RadClient()
 {
     if(_socket != 0) {
-    	close(_socket);
+	close(_socket);
     }
 }
 
@@ -60,7 +60,7 @@ void RadClient::send(RadPacket &packet)
 {
     string data = packet.pack();
     if(::send(_socket, (void*)data.data(), data.size(), 0) == -1) {
-    	throw ErrorSendingData();
+	throw ErrorSendingData();
     }
 }
 
@@ -90,7 +90,7 @@ void RadClient::read(RadPacket &packet)
 	packet.unpack(buffer);
     } else if(res < 0) {
     	cerr << "Something goes wrong: " << errno << endl;
-		throw ErrorReceivingData();
+	throw ErrorReceivingData();
     } else {
     	throw TimeoutReading();
     }
