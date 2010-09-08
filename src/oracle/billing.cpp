@@ -54,7 +54,7 @@ Billing::Billing()
 {
 	pthread_mutex_init(&__mutex, NULL);
 	__pool = NULL;
-	__env = Environment::createEnvironment("CL8MSWIN1251", "CL8MSWIN1251", Environment::THREADED_MUTEXED);
+	__env = Environment::createEnvironment("UTF8", "UTF8", Environment::THREADED_MUTEXED);
 }
 
 Billing::Billing(std::string connstr, std::string username, std::string password)
@@ -447,7 +447,7 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 		
 		std::cerr << "Query execute" << std::endl;
 		ResultSet *rs = NULL;
-		int count = NULL;
+		int count = 0;
 
 		switch(sth->execute()) {
 			case Statement::RESULT_SET_AVAILABLE:

@@ -43,7 +43,7 @@ int DispatcherCOA::sendRadiusPacket(std::string &pbhk, RadPacket &packet, RadPac
 		server = pbhk.substr(0, pos);
 	}
 
-	if(server[0] == 'S') {
+	if(server[0] == 'S' || server[0] == 'i' || server[0] == 'I') {
 		server = server.substr(1);
 	}
 

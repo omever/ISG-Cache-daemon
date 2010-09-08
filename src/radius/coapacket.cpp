@@ -94,17 +94,31 @@ string RadPacketCoA::pack(void)
 void RadPacketCoA::ping(std::string id, std::string service)
 {
     setCode("CoA-Request");
-    if(id[0] == 'I') {
-	insertAttribute("Acct-Session-Id", id.substr(1));
+    if(id[0] == 'I' || i[0] == 'i') { // Указана сессия интерфейсная или просто без PBHK
+    	size_t apos = id.find(':');
+    	if(apos == string::npos) {
+    		cerr << "Not found NAS to apply to" << endl;
+    		return;
+    	}
+
+    	string nas = id.substr(1,apos-2);
+    	string asid = id.substr(apos+1);
+    	if(id[0] == 'i') { // Сессия с численным идентификатором из биллинга
+    		unsigned long long int uid = atoi(asid.c_str());
+    		char buff[64];
+    		snprintf(buff, 64, "%08X", uid);
+    		asid = buf;
+    	}
+    	insertAttribute("Acct-Session-Id", asid);
     } else if(id[0] == 'S') {
-	insertVSAttribute("Cisco", "Cisco-Account-Info", id);
+    	insertVSAttribute("Cisco", "Cisco-Account-Info", id);
     } else {
-	insertVSAttribute("Cisco", "Cisco-Account-Info", string("S")+id);
+    	insertVSAttribute("Cisco", "Cisco-Account-Info", string("S")+id);
     }
     if(service == "") {
-	insertVSAttribute("Cisco", "Cisco-Command-Code", "\004 &");
+    	insertVSAttribute("Cisco", "Cisco-Command-Code", "\004 &");
     } else {
-	insertVSAttribute("Cisco", "Cisco-Command-Code", "\004"+service);
+    	insertVSAttribute("Cisco", "Cisco-Command-Code", "\004"+service);
     }
 }
 

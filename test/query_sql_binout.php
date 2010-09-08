@@ -5,11 +5,5 @@
     $cache = new ISGCache("utf8", "/tmp/test.sock");
 
 
-//    print_r($cache->sql("SELECT photo_size, price FROM photo_price order by price"));
-
-    if (0 === "hi there") {
-	echo "ПРИВЕТ БЛЯДЕ\n";
-    } else {
-	echo "АВОТХУЙ\n";
-    }
+    print_r($cache->sql("SELECT FIRST_NAME, LAST_NAME, MIDDLE_NAME, FIRST_NAME||LAST_NAME||MIDDLE_NAME as S from USERS where ID_USER=:id_user", array('id_user' => 2)));
 ?>

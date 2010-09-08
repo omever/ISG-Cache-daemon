@@ -153,7 +153,7 @@ bool Dispatcher::processQuery(std::string fullname)
     	}
     }
     catch (exception &e){
-    	sendString("сукебляде");
+    	sendString(e.what());
     }
     _is_processing = false;
     return res;	
