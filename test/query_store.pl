@@ -3,7 +3,7 @@
 use strict;
 use IO::Socket::UNIX;
 
-my $num_proc = 3;
+my $num_proc = 60;
 my $num_query = 1000;
 
 # Preforking
@@ -18,34 +18,19 @@ for(my $i=0; $i<$num_proc; $i++)
 my $k = $num_query;
 
 srand (time ^ $$);
-
 while($k--) {
 	my $socket = new IO::Socket::UNIX(Type => SOCK_STREAM, Peer => '/tmp/test.sock');
 	die "Error: $@" unless $socket;
-	my $r = int(rand(3000));
-	$socket->send(qq{<?xml version="1.0"?>\n});
-$socket->send(qq{
-<query>
-    <raw_sql sql="begin test_om(:out); end;">
-    </raw_sql>
-</query>});
-=here
-	$socket->send(
-qq{<query>
-	<sql sql="begin
-			pkg_plan.plan_change(:1, :2);
-			end;">
-			<param name='arg' value='780486'/>
-			<param name='arg' value='2300'/>
-	</raw_sql>
-</query>});
-=cut
+	my $r = int(rand(30000000));
+	$socket->send(qq{<?xml version="1.0"?>
+	<query><store key="blablabla$r" value="asdfasdfasfdasfdasdfasdf;lakjg;vqefhbpadsofivha;vlkhe;fvlkjdf;lakjdsfgb;kajsdhvlk;asdjvha;slka;dshasldkfjashdlfakjfg" timeout='10'/>
+	</query>\n});
 	$socket->shutdown(1);
 
 	my $data;
 	while($socket->recv($data, 1024))
 	{
-		print $data, "\n";
+#		print $data, "\n";
 	}
 
 	undef($socket);

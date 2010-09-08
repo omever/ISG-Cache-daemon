@@ -329,6 +329,55 @@ class ISGCache
 
 		return $this->rv;
 	}
+	
+	function store($key, $data, $timeout)
+	{
+		$dom = new DOMDocument("1.0", "UTF-8");
+		$dom->formatOutput = true;
+
+		$root = $dom->createElement("query");
+		$dom->appendChild($root);
+
+		$store = $dom->createElement("store");
+		$root->appendChild($store);
+
+		$attrib = $dom->createAttribute("key");
+		$store->appendChild($attrib);
+		$attrib->appendChild($dom->createTextNode($key));
+
+		$attrib = $dom->createAttribute("value");
+		$store->appendChild($attrib);
+		$attrib->appendChild($dom->createTextNode($data));
+
+		$attrib = $dom->createAttribute("timeout");
+		$store->appendChild($attrib);
+		$attrib->appendChild($dom->createTextNode($timeout));
+
+		
+		$this->query($dom->saveXML());
+
+		return $this->rv;
+	}
+	
+	function restore($key)
+	{
+		$dom = new DOMDocument("1.0", "UTF-8");
+		$dom->formatOutput = true;
+
+		$root = $dom->createElement("query");
+		$dom->appendChild($root);
+
+		$store = $dom->createElement("restore");
+		$root->appendChild($store);
+
+		$attrib = $dom->createAttribute("key");
+		$store->appendChild($attrib);
+		$attrib->appendChild($dom->createTextNode($key));
+
+		$this->query($dom->saveXML());
+
+		return $this->rv;
+	}
 }
 
 ?>

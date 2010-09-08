@@ -66,12 +66,12 @@ int main(int argc, char ** argv) {
 		__global_l = &l;
 		
 		cerr << "Debug: " << l.get("MAIN:debug") << endl;
+		signal(SIGPIPE, sig);
+		signal(SIGTTOU, sig);
+		signal(SIGKILL, sig);
+		signal(SIGSTOP, sig);
+		signal(SIGUSR1, sig);
 		if(l.get("MAIN:debug") != "true") {
-			signal(SIGPIPE, sig);
-			signal(SIGTTOU, sig);
-			signal(SIGKILL, sig);
-			signal(SIGSTOP, sig);
-			signal(SIGUSR1, sig);
 
 			string user = l.get("MAIN:userid");
 			if(user.length()) {
