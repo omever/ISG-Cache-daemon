@@ -447,7 +447,7 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 		
 		std::cerr << "Query execute" << std::endl;
 		ResultSet *rs = NULL;
-		int count = NULL;
+		int count = 0;
 
 		switch(sth->execute()) {
 			case Statement::RESULT_SET_AVAILABLE:

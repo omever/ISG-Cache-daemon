@@ -325,8 +325,6 @@ class ISGCache
 			$value->appendChild($dom->createTextNode($v));
 		}
 
-		$this->query($dom->saveXML());
-
 		return $this->rv;
 	}
 	

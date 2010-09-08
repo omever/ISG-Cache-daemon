@@ -12,6 +12,10 @@
 #include <map>
 #include <pthread.h>
 
+#ifdef ENABLE_LIBMEMCACHE
+#include <libmemcached/memcached.h>
+#endif
+
 class Cache {
 public:
 	Cache();
