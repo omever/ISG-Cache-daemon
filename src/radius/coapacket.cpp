@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <cstdlib>
+#include <cstdio>
 #include <openssl/md5.h>
 
 using namespace std;
@@ -94,7 +95,7 @@ string RadPacketCoA::pack(void)
 void RadPacketCoA::ping(std::string id, std::string service)
 {
     setCode("CoA-Request");
-    if(id[0] == 'I' || i[0] == 'i') { // Указана сессия интерфейсная или просто без PBHK
+    if(id[0] == 'I' || id[0] == 'i') { // Указана сессия интерфейсная или просто без PBHK
     	size_t apos = id.find(':');
     	if(apos == string::npos) {
     		cerr << "Not found NAS to apply to" << endl;
@@ -107,7 +108,7 @@ void RadPacketCoA::ping(std::string id, std::string service)
     		unsigned long long int uid = atoi(asid.c_str());
     		char buff[64];
     		snprintf(buff, 64, "%08X", uid);
-    		asid = buf;
+    		asid = buff;
     	}
     	insertAttribute("Acct-Session-Id", asid);
     } else if(id[0] == 'S') {
@@ -125,14 +126,54 @@ void RadPacketCoA::ping(std::string id, std::string service)
 void RadPacketCoA::logout(std::string id)
 {
     setCode("CoA-Request");
-    insertVSAttribute("Cisco", "Cisco-Account-Info", string("S")+id);
+    if(id[0] == 'I' || id[0] == 'i') { // Указана сессия интерфейсная или просто без PBHK
+    	size_t apos = id.find(':');
+    	if(apos == string::npos) {
+    		cerr << "Not found NAS to apply to" << endl;
+    		return;
+    	}
+
+    	string nas = id.substr(1,apos-2);
+    	string asid = id.substr(apos+1);
+    	if(id[0] == 'i') { // Сессия с численным идентификатором из биллинга
+    		unsigned long long int uid = atoi(asid.c_str());
+    		char buff[64];
+    		snprintf(buff, 64, "%08X", uid);
+    		asid = buff;
+    	}
+    	insertAttribute("Acct-Session-Id", asid);
+    } else if(id[0] == 'S') {
+    	insertVSAttribute("Cisco", "Cisco-Account-Info", id);
+    } else {
+    	insertVSAttribute("Cisco", "Cisco-Account-Info", string("S")+id);
+    }
     insertVSAttribute("Cisco", "Cisco-Command-Code", "\002");
 }
 
 void RadPacketCoA::serviceon(std::string id, std::string service)
 {
     setCode("CoA-Request");
-    insertVSAttribute("Cisco", "Cisco-Account-Info", string("S")+id);
+    if(id[0] == 'I' || id[0] == 'i') { // Указана сессия интерфейсная или просто без PBHK
+    	size_t apos = id.find(':');
+    	if(apos == string::npos) {
+    		cerr << "Not found NAS to apply to" << endl;
+    		return;
+    	}
+
+    	string nas = id.substr(1,apos-2);
+    	string asid = id.substr(apos+1);
+    	if(id[0] == 'i') { // Сессия с численным идентификатором из биллинга
+    		unsigned long long int uid = atoi(asid.c_str());
+    		char buff[64];
+    		snprintf(buff, 64, "%08X", uid);
+    		asid = buff;
+    	}
+    	insertAttribute("Acct-Session-Id", asid);
+    } else if(id[0] == 'S') {
+    	insertVSAttribute("Cisco", "Cisco-Account-Info", id);
+    } else {
+    	insertVSAttribute("Cisco", "Cisco-Account-Info", string("S")+id);
+    }
     char cmd[2];
     cmd[0] = 0xb;
     cmd[1] = 0;
@@ -142,7 +183,27 @@ void RadPacketCoA::serviceon(std::string id, std::string service)
 void RadPacketCoA::serviceoff(std::string id, std::string service)
 {
     setCode("CoA-Request");
-    insertVSAttribute("Cisco", "Cisco-Account-Info", string("S")+id);
+    if(id[0] == 'I' || id[0] == 'i') { // Указана сессия интерфейсная или просто без PBHK
+    	size_t apos = id.find(':');
+    	if(apos == string::npos) {
+    		cerr << "Not found NAS to apply to" << endl;
+    		return;
+    	}
+
+    	string nas = id.substr(1,apos-2);
+    	string asid = id.substr(apos+1);
+    	if(id[0] == 'i') { // Сессия с численным идентификатором из биллинга
+    		unsigned long long int uid = atoi(asid.c_str());
+    		char buff[64];
+    		snprintf(buff, 64, "%08X", uid);
+    		asid = buff;
+    	}
+    	insertAttribute("Acct-Session-Id", asid);
+    } else if(id[0] == 'S') {
+    	insertVSAttribute("Cisco", "Cisco-Account-Info", id);
+    } else {
+    	insertVSAttribute("Cisco", "Cisco-Account-Info", string("S")+id);
+    }
     char cmd[2];
     cmd[0] = 0xc;
     cmd[1] = 0;
