@@ -13,6 +13,7 @@ class ISGCache
 	private $level = 0;
 	private $current = null;
 	private $codepage;
+	private $error = null;
 
 	function __construct($codepage = "utf8", $socketPath = null)
 	{
@@ -73,6 +74,11 @@ class ISGCache
 	function tag_open($parser, $tag, $attributes)
 	{
 		$this->level++;
+		if($this->level == 1) {
+			if(!empty($attributes["TEXT"])) {
+				$this->error = $attributes["TEXT"];
+			}
+		}
 		if($this->level == 2) {
 			if($this->rv === FALSE) {
 				$this->rv = array();
@@ -119,6 +125,11 @@ class ISGCache
 		}
 	}
 
+	function getError()
+	{
+		return $this->error;
+	}
+	
 	function query($xml)
 	{
 		$this->connect($this->codepage);
@@ -298,7 +309,6 @@ class ISGCache
 
 	function sql($query, $args = array())
 	{
-
 		$dom = new DOMDocument("1.0", "UTF-8");
 		$dom->formatOutput = true;
 
@@ -325,6 +335,7 @@ class ISGCache
 			$value->appendChild($dom->createTextNode($v));
 		}
 
+		$this->query($dom->saveXML());
 		return $this->rv;
 	}
 	

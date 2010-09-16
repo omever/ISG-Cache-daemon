@@ -6,18 +6,18 @@
 // Description : ISG Cache Daemon
 //============================================================================
 
-#include <occi.h>
-#include <oci.h>
-#include <oratypes.h>
 #include <map>
 #include <vector>
 #include <iostream>
 #include <algorithm>
 #include <cstring>
+#include <exception>
+#include <sstream>
 
 #include "billing.h"
 
 using namespace oracle::occi;
+using namespace std;
 
 #define QUERY_ISG_ONLINE "SELECT io.user_id, \
 								 to_char(io.start_time, 'HH24:MI:SS DD.MM') start_time, \
@@ -391,8 +391,13 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 	std::map<std::string, char*> _buffer;
 	std::map<std::string, sb2> indp;
 	std::map<std::string, ub2> alenp;
+	vector<text*> defs;
+	vector<string> colnames;
+	vector<sb2*> indps;
 
 	_buffer.clear();
+	defs.clear();
+	indps.clear();
 
 	try {
 		sth = _conn->createStatement(query);
@@ -443,42 +448,98 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 			    SQLT_STR, (void*)&(indp[(char*)(bnvp[i])]), &(alenp[(char*)(bnvp[i])]), (ub2*)0, (ub4)0, (ub4*)0, (ub4)0) << std::endl;
 		}
 
-		OCIHandleFree((dvoid *)error, (ub4)OCI_HTYPE_ERROR);
-		
-		std::cerr << "Query execute" << std::endl;
-		ResultSet *rs = NULL;
-		int count = 0;
+	// Checking type of the query
+		ub2 oci_stmt_type;
 
-		switch(sth->execute()) {
-			case Statement::RESULT_SET_AVAILABLE:
-				rs = sth->getResultSet();
-				break;
-			case Statement::UPDATE_COUNT_AVAILABLE:
-				count = sth->getUpdateCount();
-				break;
-			case Statement::NEEDS_STREAM_DATA:
-			case Statement::PREPARED:
-			case Statement::STREAM_DATA_AVAILABLE:
-			case Statement::UNPREPARED:
-			default:
-				std::cerr << "Unable status type of the execute result method! Within query: " << query << std::endl;
-				break;
+		checkerr(error, OCIAttrGet(sth_oci,
+				OCI_HTYPE_STMT,
+				(void*)&oci_stmt_type,
+				0,
+				OCI_ATTR_STMT_TYPE,
+				error));
+
+		ub4 iters;
+		switch(oci_stmt_type) {
+		case OCI_STMT_SELECT:
+			iters = 0;
+			break;
+		default:
+			iters = 1;
+			break;
 		}
-		if(rs != NULL) {
-			const std::vector<MetaData> md = rs->getColumnListMetaData();
 
-			if(rs) {
-				while( rs->next() ) {
-					std::multimap<std::string, std::string> tmp;
-					tmp.clear();
-					for(int i=0; i < md.size(); ++i) {
-						tmp.insert(std::pair<std::string, std::string>(md.at(i).getString(MetaData::ATTR_NAME), rs->getString(i+1)));
-					}
-					_rv.push_back(tmp);
-				}
+		checkerr(error, OCIStmtExecute(
+				_conn->getOCIServiceContext(),
+				sth_oci,
+				error,
+				iters,
+				0,
+				(OCISnapshot*)0,
+				(OCISnapshot*)0,
+				OCI_DEFAULT
+		));
+
+
+		OCIParam *paramdp = NULL;
+		ub4 counter = 1;
+		sb4 parm_status;
+		parm_status = OCIParamGet(sth_oci, OCI_HTYPE_STMT, error, (void**)&paramdp, counter);
+
+		while (parm_status==OCI_SUCCESS) {
+			ub2 dtype;
+			text *col_name;
+			ub4 col_name_len;
+			/* Retrieve the data type attribute */
+			checkerr(error, OCIAttrGet((dvoid*) paramdp, (ub4) OCI_DTYPE_PARAM,
+					(dvoid*) &dtype, (ub4 *)0, (ub4) OCI_ATTR_DATA_TYPE, error));
+			/* Retrieve the column name attribute */
+			checkerr(error, OCIAttrGet((dvoid*) paramdp, (ub4) OCI_DTYPE_PARAM, (dvoid**) &col_name, (ub4 *)&col_name_len, (ub4) OCI_ATTR_NAME, error));
+
+			ub2 deptlen;
+			checkerr(error, OCIAttrGet(paramdp, OCI_DTYPE_PARAM, (dvoid*) &deptlen, (ub4 *) 0, (ub4) OCI_ATTR_DATA_SIZE, (OCIError *) error));
+
+			// Some DB masters very like 8-bit encodings for no real reason.
+			// Therefore we need to preserve up to 6 bytes per character to insure
+			// buffer capacity (UTF8 uses up to 6 bytes per character)
+			ub2 datalen = deptlen * 6 + 1;
+			text *dept = new text[datalen];
+			OCIDefine *defnp;
+
+			defs.push_back(dept);
+			colnames.push_back((const char*)col_name);
+			indps.push_back(new sb2);
+
+			if (parm_status = OCIDefineByPos(sth_oci, &defnp, error, counter, (ub1 *) dept, datalen, SQLT_STR, (dvoid *) indps.back(), (ub2 *) 0, (ub2 *)0, OCI_DEFAULT))
+			{
+				checkerr(error, parm_status);
+				return(-1);
 			}
-			sth->closeResultSet(rs);
+
+			/* increment counter and get next descriptor, if there is one */
+			counter++;
+			parm_status = OCIParamGet(sth_oci, OCI_HTYPE_STMT, error, (void**)&paramdp, counter);
 		}
+
+		if(defs.size() > 0) {
+			while(OCIStmtFetch(sth_oci, error, 1, OCI_FETCH_NEXT, OCI_DEFAULT) == OCI_SUCCESS) {
+				std::multimap<std::string, std::string> tmp;
+				tmp.clear();
+				cerr << "Adding data defs sz=" << defs.size() << ";VALUE=";
+				for(int i=0; i < defs.size(); ++i) {
+					if(*indps.at(i) == -1) {
+						tmp.insert(std::pair<std::string, std::string>(colnames.at(i), ""));
+						cerr << "(NULL)";
+					} else {
+						tmp.insert(std::pair<std::string, std::string>(colnames.at(i), (const char*)defs.at(i)));
+						cerr << (const char*)defs.at(i);
+					}
+					cerr << endl;
+				}
+				_rv.push_back(tmp);
+			}
+		}
+
+		OCIHandleFree((dvoid *)error, (ub4)OCI_HTYPE_ERROR);
 
 		if(_buffer.size()) {
 			std::map<std::string, char *>::iterator i, iend = _buffer.end();
@@ -499,8 +560,9 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 	}
 	catch (SQLException &sqlExcp)
 	{
-	   std::cerr <<sqlExcp.getErrorCode() << " at " << __FILE__ << "/" << __LINE__ << ": " << sqlExcp.getMessage() << std::endl;
-	   retval = sqlExcp.getErrorCode();
+		stringstream temp;
+		temp << "Oracle error at " << __FILE__ << "/" << __LINE__ << ": " << sqlExcp.getMessage();
+		throw OracleException(temp.str());
 	}
 
 	if(sth != NULL) {
@@ -508,9 +570,58 @@ int BillingInstance::querySQL(std::string query, const std::map<std::string, std
 	}
 
 	std::map<std::string, char *>::iterator i, iend = _buffer.end();
+	cerr << "Cleaning buffers:";
+	cerr << "_buffer sz=" << _buffer.size() << ";";
 	for(i = _buffer.begin() ; i != iend ; ++i) 
 		delete [] (i->second);
+
+	cerr << "defs sz=" << defs.size() << endl;
+	for(int i=0; i<defs.size(); ++i) {
+		delete [] defs[i];
+	}
+	for(int i=0; i<indps.size(); ++i)
+		delete indps[i];
 
 	return retval;
 }
 
+bool BillingInstance::checkerr(OCIError *errhp, sword status)
+{
+	text errbuf[512];
+	ub4 buflen;
+	if (status == OCI_SUCCESS) return true;
+
+	switch (status)
+	{
+		case OCI_SUCCESS_WITH_INFO:
+			OCIErrorGet ((void *) errhp, (ub4) 1, (text *) NULL, &_errcode,
+					errbuf, (ub4) sizeof(errbuf), (ub4) OCI_HTYPE_ERROR);
+			_info = (const char*)errbuf;
+			return true;
+			break;
+		case OCI_NEED_DATA:
+			throw OracleException("OCI_NEED_DATA");
+			break;
+		case OCI_NO_DATA:
+			throw OracleException("OCI_NO_DATA");
+			break;
+		case OCI_ERROR:
+			OCIErrorGet ((void *) errhp, (ub4) 1, (text *) NULL, &_errcode,
+					errbuf, (ub4) sizeof(errbuf), (ub4) OCI_HTYPE_ERROR);
+			throw OracleException((const char*)errbuf);
+			break;
+		case OCI_INVALID_HANDLE:
+			throw OracleException("OCI_INVALID_HANDLE");
+			break;
+		case OCI_STILL_EXECUTING:
+			throw OracleException("OCI_STILL_EXECUTING");
+			break;
+		case OCI_CONTINUE:
+			throw OracleException("OCI_CONTINUE");
+			break;
+		default:
+			throw OracleException("OCI_ERROR");
+			break;
+	}
+	return true;
+}

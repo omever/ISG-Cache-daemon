@@ -4,7 +4,11 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <exception>
 #include <pthread.h>
+#include <oci.h>
+#include <occi.h>
+#include <oratypes.h>
 
 #include "queryresult.h"
 
@@ -15,6 +19,32 @@ namespace oracle {
 		class Statement;
 		class StatelessConnectionPool;
 	};
+};
+
+/**
+ * Oracle exceptions
+ */
+class OracleException : public std::exception
+{
+public:
+	OracleException(const std::string &description){
+		__description = description;
+	}
+
+	OracleException(const char * description){
+		__description = description;
+	}
+
+	virtual ~OracleException() throw () {
+
+	}
+
+	virtual const char* what() const throw()
+	{
+		return __description.c_str();
+	}
+private:
+	std::string __description;
 };
 
 
@@ -36,6 +66,7 @@ private:
 	oracle::occi::StatelessConnectionPool *__pool;
 };
 
+
 class BillingInstance
 {
 public:
@@ -51,6 +82,9 @@ public:
 	int querySQL(std::string query, const std::map<std::string, std::vector<std::string> > &params, queryResult &_rv);
 	void cancelRequest(void);
 protected:
+	bool checkerr(OCIError *errhp, sword status);
+	std::string _info;
+	sb4 _errcode;
 private:
 	oracle::occi::Connection *_conn;
 	Billing *_bill;

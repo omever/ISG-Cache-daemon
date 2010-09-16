@@ -20,6 +20,8 @@ public:
 protected:
 private:
 	std::map<std::string, std::pair<std::string, bool> > __bindouts;
+	std::string __info;
+	long long __code;
 	static const std::string __emptystring;
 	static const bool __true;
 };

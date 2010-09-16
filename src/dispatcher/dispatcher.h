@@ -66,6 +66,7 @@ protected:
 	bool processQuery(std::string fullname);
 	bool storeData();
 	bool restoreData();
+	const std::string error_xml(const std::string &error);
 private:
 	int _sd;
 	int _ts;

@@ -10,6 +10,8 @@ const bool queryResult::__true = true;
 queryResult::queryResult()
 	: std::vector<std::multimap<std::string, std::string> >()
 {
+	__code = 0;
+	__info = "";
 }
 
 void queryResult::add_bind(const std::string &name, const std::string &value, bool is_null)
@@ -66,7 +68,18 @@ const std::string queryResult::to_xml()
 
 	std::stringstream temp;
 	temp << size();
-	xmlNewProp(root, BAD_CAST "count", BAD_CAST temp.str().c_str()); 
+	xmlNewProp(root, BAD_CAST "count", BAD_CAST temp.str().c_str());
+
+	if(__code != 0) {
+		temp.str("");
+		temp << __code;
+		xmlNewProp(root, BAD_CAST "ocicode", BAD_CAST temp.str().c_str());
+	}
+
+	if(__info.length()) {
+		xmlNewProp(root, BAD_CAST "ociinfo", BAD_CAST __info.c_str());
+	}
+
 	xmlDocSetRootElement(doc, root);
 
 

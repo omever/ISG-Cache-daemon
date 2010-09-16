@@ -153,7 +153,7 @@ bool Dispatcher::processQuery(std::string fullname)
     	}
     }
     catch (exception &e){
-    	sendString(e.what());
+    	sendString(error_xml(e.what()));
     }
     _is_processing = false;
     return res;	
@@ -423,4 +423,31 @@ std::string Dispatcher::getCache(std::string key)
 void Dispatcher::setCache(std::string key, std::string value, int timeout)
 {
     _listener->setValue(key, value, timeout);
+}
+
+const std::string Dispatcher::error_xml(const std::string &error)
+{
+	xmlDocPtr doc;
+	xmlNodePtr root;
+	int rc;
+	std::string returnValue;
+
+	doc = xmlNewDoc(BAD_CAST "1.0");
+	root = xmlNewNode(NULL, BAD_CAST "error");
+	xmlNewProp(root, BAD_CAST "text", BAD_CAST error.c_str());
+
+	xmlDocSetRootElement(doc, root);
+
+	xmlBufferPtr buf = xmlBufferCreate();
+	xmlSaveCtxtPtr sav = xmlSaveToBuffer(buf, "UTF-8", XML_SAVE_FORMAT | XML_SAVE_NO_EMPTY);
+
+	xmlSaveDoc(sav, doc);
+	xmlSaveClose(sav);
+
+	returnValue = (char*)buf->content;
+
+	xmlBufferFree(buf);
+	xmlFreeDoc(doc);
+
+	return returnValue;
 }
